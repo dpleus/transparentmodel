@@ -4,7 +4,7 @@ from torch.profiler import profile, record_function, ProfilerActivity
 import threading
 import json
 
-from transparentmodel.utils import capture_memory_usage
+from transparentmodel.analysis import capture_memory_usage
 
 
 def track_memory_usage(func):

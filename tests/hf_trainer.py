@@ -7,6 +7,11 @@ from transparentmodel.huggingface.training import train_with_memory_tracking
 
 # Load Model
 model = AutoModelForCausalLM.from_pretrained("gpt2")
+config = model.config
+config.use_cache = False
+model = AutoModelForCausalLM.from_pretrained("gpt2", config=config)
+print(model.config)
+
 
 # Prepare Data
 dataset = load_dataset("vicgalle/alpaca-gpt4")
@@ -22,7 +27,7 @@ tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
 data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
-args = TrainingArguments(output_dir="test_trainer", evaluation_strategy="epoch")
+args = TrainingArguments(output_dir="test_trainer", evaluation_strategy="epoch", per_device_train_batch_size=1)
 
 trainer = Trainer(
     model,

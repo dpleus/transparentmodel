@@ -109,7 +109,7 @@ def available_ram():
             for i in range(gpu_count):
                 gpu_info = torch.cuda.get_device_properties(i)
                 total_gpu_ram_gb = bytes_to_gb(gpu_info.total_memory)
-                available_gpu_ram_gb = bytes_to_gb(torch.cuda.max_memory_allocated(i))
+                available_gpu_ram_gb = bytes_to_gb(gpu_info.total_memory)-bytes_to_gb(torch.cuda.memory_allocated(i))
                 gpu_ram_info.append({
                     "gpu_index": i,
                     "total_ram": total_gpu_ram_gb,

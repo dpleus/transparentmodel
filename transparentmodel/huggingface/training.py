@@ -15,6 +15,7 @@ class ProfCallback(TrainerCallback):
         print(f"Model size in MB {model_size(kwargs['model'])}")
         print(available_ram())
 
+        kwargs["model"].generation_config.use_cache = False
         kwargs["model"].register_forward_hook(forward_hook_activations)
         kwargs["model"].register_backward_hook(backward_hook_gradients)
 
