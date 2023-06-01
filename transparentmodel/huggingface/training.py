@@ -28,7 +28,7 @@ class ProfCallback(TrainerCallback):
 
 
 def apply_torchprofiler_and_callback(func):
-    def wrapper(trainer, *args, **kwargs):
+    def wrapper(trainer, realtime, *args, **kwargs):
         model = trainer.model
 
         print("---------- System memory ----------")
@@ -40,7 +40,6 @@ def apply_torchprofiler_and_callback(func):
         print(f"Model Size: {model_size(model)} GB")
         print(f"Model dtype: {model.dtype}")
 
-        realtime = False
         if realtime:
             stop_event = threading.Event()
 
@@ -67,6 +66,6 @@ def apply_torchprofiler_and_callback(func):
 
 
 @apply_torchprofiler_and_callback
-def train_with_memory_tracking(trainer, *args, **kwargs):
+def train_with_memory_tracking(trainer, realtime=True, *args, **kwargs):
     trainer.train()
     return trainer

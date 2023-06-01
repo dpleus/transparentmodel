@@ -37,4 +37,4 @@ trainer = Trainer(
     tokenizer=tokenizer
 )
 
-train_with_memory_tracking(trainer)
+train_with_memory_tracking(trainer, realtime=True)
