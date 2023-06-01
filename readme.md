@@ -2,7 +2,6 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.6%2B-blue.svg)](https://www.python.org/)
-[![PyPI](https://img.shields.io/pypi/v/model-tracker.svg)](https://pypi.org/project/model-tracker/)
 
 ## Overview
 
@@ -21,8 +20,8 @@ Currently, the package supports tracking memory usage and FLOPs for models based
 ## Installation
 
 You can install the package using `pip`:
-
-<pre>pip install model-tracker</pre>
+<pre>git clone https://github.com/dpleus/transparentmodel
+pip install .</pre>
 
 
 ## Usage
@@ -33,13 +32,24 @@ from transparentmodel.huggingface import inference
 
 # Replace original inference function with the wrapped one
 <s>output = model.generate(input_tokens)</s>
-output = inference.generate_with_memory_tracking(model, input_tokens)
+output = inference.generate_with_memory_tracking(model, realtime=True)
 </pre>
 
-Metric
+### Transformer Training
+
+<pre>
+from transparentmodel.huggingface.training import train_with_memory_tracking
+
+# Replace original inference function with the wrapped one
+<s>trainer.train()</s>
+train_with_memory_tracking(trainer, realtime=True)
+</pre>
+
+
+Metrics
 - System memory: For GPUs and RAM
-- Model metrics: Parameter memory & dtype
-- Memory Tracking: Per second, for both GPU and RAM
+- Model metrics: Parameter memory & dtype (activations and gradients for training)
+- Memory Tracking: Per second, for both GPU and RAM (if realtime=True)
 - Summary: Minimum free RAM and Peak Utilization (only CPU yet)
 - Deep Dive: Compute Time and Memory Usage per sub-operation
 
