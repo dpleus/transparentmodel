@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "transparentmodel"
+version = "0.1.0"
+description = ""
+authors = ["dpleus <danielpleus@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+transformers = "*"
+torch = "*"
+accelerate = "*"
+datasets = "*"
+torchvision = "*"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "*"
+
+[tool.black]
+line-length = 79
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

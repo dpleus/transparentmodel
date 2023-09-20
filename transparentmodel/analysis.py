@@ -5,6 +5,7 @@ import torch
 import time
 import json
 
+
 def memory_in_use():
     process = psutil.Process()
     memory_used_bytes = process.memory_info().rss
@@ -30,9 +31,9 @@ def model_size(model):
             model_size[device] += buffer.nelement() * buffer.element_size()
         model_size[device] += buffer.nelement() * buffer.element_size()
 
-    model_size_gb = {k: bytes_to_mb(v) for k, v in model_size.items()}
+    model_size_mb = {k: bytes_to_mb(v) for k, v in model_size.items()}
 
-    return model_size_gb
+    return model_size_mb
 
 
 def gradients_size(grad_input):
@@ -43,9 +44,13 @@ def gradients_size(grad_input):
         gradients = grads.data
         if gradients is not None:
             if device not in gradient_size:
-                gradient_size[device] = gradients.nelement() * gradients.element_size()
+                gradient_size[device] = (
+                    gradients.nelement() * gradients.element_size()
+                )
             else:
-                gradient_size[device] += gradients.nelement() * gradients.element_size()
+                gradient_size[device] += (
+                    gradients.nelement() * gradients.element_size()
+                )
 
     gradient_size_gb = {k: bytes_to_mb(v) for k, v in gradient_size.items()}
 
@@ -60,11 +65,17 @@ def optimizer_state_size(optimizer):
                 state = sub_values
                 device = state.device.type
                 if device not in optimizer_state_size:
-                    optimizer_state_size[device] = state.nelement() * state.element_size()
+                    optimizer_state_size[device] = (
+                        state.nelement() * state.element_size()
+                    )
                 else:
-                    optimizer_state_size[device] += state.nelement() * state.element_size()
+                    optimizer_state_size[device] += (
+                        state.nelement() * state.element_size()
+                    )
 
-    optimizer_state_size_gb = {k: bytes_to_mb(v) for k, v in optimizer_state_size.items()}
+    optimizer_state_size_gb = {
+        k: bytes_to_mb(v) for k, v in optimizer_state_size.items()
+    }
 
     return optimizer_state_size_gb
 
@@ -77,11 +88,17 @@ def activations_size(act_input):
 
     if activations is not None:
         if device not in activations_size:
-            activations_size[device] = activations.nelement() * activations.element_size()
+            activations_size[device] = (
+                activations.nelement() * activations.element_size()
+            )
         else:
-            activations_size[device] += activations.nelement() * activations.element_size()
+            activations_size[device] += (
+                activations.nelement() * activations.element_size()
+            )
 
-    activations_size_mb = {k: bytes_to_mb(v) for k, v in activations_size.items()}
+    activations_size_mb = {
+        k: bytes_to_mb(v) for k, v in activations_size.items()
+    }
 
     return activations_size_mb
 
@@ -97,29 +114,36 @@ def available_ram():
     available_ram_gb = bytes_to_gb(mem_info.available)
     ram_info["system_ram"] = {
         "total": total_ram_gb,
-        "available": available_ram_gb
+        "available": available_ram_gb,
     }
 
     # GPU RAM
     try:
         import torch
+
         if torch.cuda.is_available():
             gpu_count = torch.cuda.device_count()
             gpu_ram_info = []
             for i in range(gpu_count):
                 gpu_info = torch.cuda.get_device_properties(i)
                 total_gpu_ram_gb = bytes_to_gb(gpu_info.total_memory)
-                available_gpu_ram_gb = bytes_to_gb(gpu_info.total_memory)-bytes_to_gb(torch.cuda.memory_allocated(i))
-                gpu_ram_info.append({
-                    "gpu_index": i,
-                    "total_ram": total_gpu_ram_gb,
-                    "available_ram": available_gpu_ram_gb
-                })
+                available_gpu_ram_gb = bytes_to_gb(
+                    gpu_info.total_memory
+                ) - bytes_to_gb(torch.cuda.memory_allocated(i))
+                gpu_ram_info.append(
+                    {
+                        "gpu_index": i,
+                        "total_ram": total_gpu_ram_gb,
+                        "available_ram": available_gpu_ram_gb,
+                    }
+                )
             ram_info["gpu_ram"] = gpu_ram_info
         else:
             ram_info["gpu_ram"] = "No GPU available."
     except ImportError:
-        ram_info["gpu_ram"] = "PyTorch is not installed. Skipping GPU RAM information."
+        ram_info[
+            "gpu_ram"
+        ] = "PyTorch is not installed. Skipping GPU RAM information."
 
     return ram_info
 
@@ -141,7 +165,10 @@ def capture_memory_usage(stop_event):
         # Append memory usage and elapsed time to the list
         memory_usage.append((elapsed_time, current_memory))
 
-        print(f"Elapsed time: {elapsed_time:.2f}s | Memory usage: {json.dumps(available_ram(), indent=4)}")
+        print(
+            f"Elapsed time: {elapsed_time:.2f}s"
+            f"Memory usage: {json.dumps(available_ram(), indent=4)}"
+        )
 
         # Sleep for one second
         time.sleep(1)

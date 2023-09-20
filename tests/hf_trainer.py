@@ -1,4 +1,4 @@
-from transformers import Trainer, TrainingArguments, TrainerCallback
+from transformers import Trainer, TrainingArguments
 from transformers import DataCollatorForLanguageModeling
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -20,21 +20,26 @@ tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
 
 def tokenize_function(example):
-    return tokenizer(example["text"], truncation=True, padding="max_length")
+    return tokenizer(example["text"])
+
 
 tokenizer.pad_token = tokenizer.eos_token
 tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
 data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
-args = TrainingArguments(output_dir="test_trainer", evaluation_strategy="epoch", per_device_train_batch_size=1)
+args = TrainingArguments(
+    output_dir="test_trainer",
+    evaluation_strategy="epoch",
+    per_device_train_batch_size=2,
+)
 
 trainer = Trainer(
     model,
     args,
     train_dataset=tokenized_datasets["train"],
     data_collator=data_collator,
-    tokenizer=tokenizer
+    tokenizer=tokenizer,
 )
 
-train_with_memory_tracking(trainer, realtime=True)
+train_with_memory_tracking(trainer, realtime=False)

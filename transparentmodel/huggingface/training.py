@@ -1,6 +1,13 @@
 from transformers import TrainerCallback
-from transparentmodel.analysis import available_ram, model_size, optimizer_state_size, gradients_size, activations_size
-from transparentmodel.pytorch_hooks import backward_hook_gradients, forward_hook_activations
+from transparentmodel.analysis import (
+    available_ram,
+    model_size,
+    optimizer_state_size,
+)
+from transparentmodel.pytorch_hooks import (
+    backward_hook_gradients_general,
+    forward_hook_activations_hf,
+)
 import torch
 from transparentmodel.analysis import capture_memory_usage, memory_in_use
 import threading
@@ -16,15 +23,17 @@ class ProfCallback(TrainerCallback):
         print(available_ram())
 
         kwargs["model"].generation_config.use_cache = False
-        kwargs["model"].register_forward_hook(forward_hook_activations)
-        kwargs["model"].register_backward_hook(backward_hook_gradients)
+        kwargs["model"].register_forward_hook(forward_hook_activations_hf)
+        kwargs["model"].register_backward_hook(backward_hook_gradients_general)
 
     def on_step_end(self, args, state, control, **kwargs):
         self.prof.step()
         print(available_ram())
         # print(model_size(kwargs["model"]))
         # print(gradients_size(kwargs["model"]))
-        print(f"Optimizer Size in MB {optimizer_state_size(kwargs['optimizer'])}")
+        print(
+            f"Optimizer Size in MB {optimizer_state_size(kwargs['optimizer'])}"
+        )
 
 
 def apply_torchprofiler_and_callback(func):
@@ -37,23 +46,32 @@ def apply_torchprofiler_and_callback(func):
 
         print("")
         print("---------- Model ----------")
-        print(f"Model Size: {model_size(model)} GB")
+        print(f"Model Size: {model_size(model)} MB")
         print(f"Model dtype: {model.dtype}")
 
         if realtime:
             stop_event = threading.Event()
 
-            memory_thread = threading.Thread(target=capture_memory_usage, args=(stop_event,))
+            memory_thread = threading.Thread(
+                target=capture_memory_usage, args=(stop_event,)
+            )
             memory_thread.start()
 
-        with torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,
-                                                torch.profiler.ProfilerActivity.CUDA],
-                                    schedule=torch.profiler.schedule(skip_first=3, wait=1, warmup=1, active=2,
-                                                                     repeat=2),
-                                    on_trace_ready=torch.profiler.tensorboard_trace_handler('hf-training-trainer'),
-                                    profile_memory=True,
-                                    with_stack=True,
-                                    record_shapes=True) as prof:
+        with torch.profiler.profile(
+            activities=[
+                torch.profiler.ProfilerActivity.CPU,
+                torch.profiler.ProfilerActivity.CUDA,
+            ],
+            schedule=torch.profiler.schedule(
+                skip_first=3, wait=1, warmup=1, active=2, repeat=2
+            ),
+            on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                "hf-training-trainer"
+            ),
+            profile_memory=True,
+            with_stack=True,
+            record_shapes=True,
+        ) as prof:
             trainer.add_callback(ProfCallback(prof=prof))
             func(trainer, *args, **kwargs)
             if realtime:
